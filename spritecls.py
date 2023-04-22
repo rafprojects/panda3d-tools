@@ -1,11 +1,14 @@
-from panda3d.core import Texture, CardMaker, NodePath, Vec3
-from direct.task.Task import Task
+from panda3d.core import Texture, CardMaker
 
 
 class SpriteLoad():
-    def __init__(self, base, texture_path, pos=(0, 0, 0), scale=1.0, parent=None):
+    def __init__(self, base, texture_path, pos=(0, 0, 0), scale=1.0, parent=None, pixel_art_scaling=True):
         # self.idle_textures = textureGetter(base_path, f"{type}/idle")
+        self.base = base
         self.texture = base.loader.loadTexture(texture_path)
+        if pixel_art_scaling:
+            self.texture.setMagfilter(Texture.FT_nearest)
+            self.texture.setMinfilter(Texture.FT_nearest)
 
         card_maker = CardMaker("sprite")
         tex_w = self.texture.getXSize()
@@ -19,7 +22,3 @@ class SpriteLoad():
         self.sprite.setTransparency(True)
         self.sprite.setPos(pos)
         self.sprite.setScale(scale * 0.03)
-
-    def move(self, delta_x, delta_y):
-        self.sprite.setPos(Vec3(self.sprite.getX() + delta_x, 
-                                self.sprite.getY() + delta_y, 0))
