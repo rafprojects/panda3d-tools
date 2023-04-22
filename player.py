@@ -1,6 +1,9 @@
 from panda3d.core import Vec3
+from direct.actor.Actor import Actor
 
 from spritecls import SpriteLoad
+from helpers import textureLoader
+from sequences import PLAYER_SEQUENCES
 
 
 class Player():
@@ -8,14 +11,17 @@ class Player():
     def __init__(self, base, charId):
         self.base = base
         self.charId = charId
-        self.player_texture = "output/ship/idle/0.png"
-        self.player_sprite = SpriteLoad(texture_path=self.player_texture, 
+        self.player_anim_states = ["idle", "left", "right"]
+        self.player_textures = textureLoader(self.player_anim_states, "output", "ship")
+        self.player_sprite = SpriteLoad(texture_path=self.player_textures[("idle", 0)], 
                                         base=base, 
                                         pos=(0, 0, 0), 
                                         scale=0.2,
                                         pixel_art_scaling=True)
         self.move_speed = 2
+       
         self.moving = {"left": False, "right": False, "up": False, "down": False}
+        
         
         # Keypress event handlers
         base.accept("arrow_left", self.set_move_direction, ["left", True])
