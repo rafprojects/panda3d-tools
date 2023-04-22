@@ -14,6 +14,7 @@ class Base(ShowBase):
 
 
 class Game():
+    '''The main game class.  This class encapsulates all non built-in game classes and their logic.'''
     def __init__(self, base):
         self.base = base        
         self.player = Player(base=self.base, charId=0)
