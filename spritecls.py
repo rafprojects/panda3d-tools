@@ -3,11 +3,12 @@ from panda3d.core import Texture, CardMaker
 
 class SpriteLoad():
     '''SpriteLoad is a class that loads a sprite from a texture and attaches it to the scene graph.\n The sprite optionally can enable pixel art scaling to avoid blurring.\nSprite start position and scale can be set, and the scale is multiplied by 0.03 to adjust to the field size.\n '''
-    def __init__(self, base, texture_path, pos=(0, 0, 0), scale=1.0, parent=None, pixel_art_scaling=True):
+    def __init__(self, base, texture_obj, pos=(0, 0, 0), scale=1.0, parent=None, pixel_art_scaling=True):
 
         # self.idle_textures = textureGetter(base_path, f"{type}/idle")
         self.base = base # pull in the base object to be able to act on it from within a separate class
-        self.texture = base.loader.loadTexture(texture_path)
+        # self.texture = base.loader.loadTexture(texture_path)
+        self.texture = texture_obj
         if pixel_art_scaling: # if we want to use nearest neighbor scaling to avoid blurring
             self.texture.setMagfilter(Texture.FT_nearest)
             self.texture.setMinfilter(Texture.FT_nearest)
