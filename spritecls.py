@@ -1,4 +1,5 @@
 from panda3d.core import Texture, CardMaker
+from direct.gui.DirectFrame import DirectFrame
 
 
 class SpriteLoad():
@@ -6,10 +7,10 @@ class SpriteLoad():
     def __init__(self, base, texture_obj, pos=(0, 0, 0), scale=1.0, parent=None, pixel_art_scaling=True):
 
         # self.idle_textures = textureGetter(base_path, f"{type}/idle")
-        self.base = base # pull in the base object to be able to act on it from within a separate class
+        self.base = base  # pull in the base object to be able to act on it from within a separate class
         # self.texture = base.loader.loadTexture(texture_path)
         self.texture = texture_obj
-        if pixel_art_scaling: # if we want to use nearest neighbor scaling to avoid blurring
+        if pixel_art_scaling:  # if we want to use nearest neighbor scaling to avoid blurring
             self.texture.setMagfilter(Texture.FT_nearest)
             self.texture.setMinfilter(Texture.FT_nearest)
 

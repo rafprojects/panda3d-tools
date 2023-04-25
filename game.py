@@ -19,6 +19,7 @@ class Game():
         self.base = base        
         self.player = Player(base=self.base, charId=0)
         self.base.taskMgr.add(self.player.update, "move_task")
+        self.base.taskMgr.add(self.player.update_animation, "anim_task")
     
 
 # Game Init
