@@ -15,9 +15,11 @@ class Game():
     '''The main game class.  This class encapsulates all non built-in game classes and their logic.'''
     def __init__(self, base):
         self.base = base
+        self.base.set_background_color(0.1, 0.1, 0.1, 1)
         self.player = Player(base=self.base, charId=0, player_model_file='output/ship/ship')
         self.base.taskMgr.add(self.player.move_ship, "move_task")
         self.base.taskMgr.add(self.player.update_animation, "update_animation")
+        self.base.taskMgr.add(self.player.update_bullets, "update_bullets")
         lens = OrthographicLens()
         lens.setFilmSize(640, 480)
         lens.setNearFar(-50, 50)
