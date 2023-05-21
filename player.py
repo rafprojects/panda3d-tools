@@ -59,7 +59,9 @@ class Player():
         return task.cont  # return task.cont to keep the task running
 
     def fire_bullet(self, vel):
-        bullet = Bullet(self.base, 1.0, self.player_sprite.model.getPos(), vel)
+        print(self.player_sprite.model.getX() + 10, self.player_sprite.model.getZ() + 10)
+        bullet_coords = (self.player_sprite.model.getX() + 7, 0, self.player_sprite.model.getZ() + 15)
+        bullet = Bullet(self.base, 1.0, bullet_coords, vel, 'output/weapons/bullet')
         print(f"SHOT BULLET AT {bullet.getPos()}")
         bullet.reparentTo(self.base.render)
         self.bullets.append(bullet) 
@@ -102,10 +104,11 @@ class Player():
                 self.bullets.remove(self.bullets[0])
         return task.cont
 
+
 class Bullet(NodePath):
-    def __init__(self, base, scale, shipPos, vel):
+    def __init__(self, base, scale, shipPos, vel, bullet_model):
         super().__init__("bullet")
-        self.model = base.loader.loadModel('output/weapons/bullet')
+        self.model = base.loader.loadModel(bullet_model)
         self.model.reparentTo(self)
         self.setPos(shipPos)
         self.setScale(scale)
