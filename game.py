@@ -30,8 +30,8 @@ class Game():
         self.enemy_spawner = EnemySpawner(
             base=self.base, 
             enemy_class=Enemy, 
-            spawn_interval=3.0, 
-            spawn_area=(-50.0, 50.0, 50.0, 200.0))
+            spawn_interval=30.0, 
+            spawn_area=(-300.0, 300.0, 50.0, 200.0))
     
 
 # Game Init

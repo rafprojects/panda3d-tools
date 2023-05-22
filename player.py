@@ -12,8 +12,8 @@ class Player():
         self.player_sprite = Eggmodel(base=base,  
                                       pos=(0, 0, 0), 
                                       scale=0.4, 
-                                      parent=self.base.render,
                                       model_file=player_model_file)
+        self.player_sprite.reparentTo(self.base.render)
         # Movement & animation variables
         self.move_speed = 200
         self.moving_keymap = {"left": False, "right": False, "up": False, "down": False}
@@ -35,8 +35,7 @@ class Player():
         self.base.accept("arrow_down", self.update_moving_keymap, ["down", True])
         self.base.accept("arrow_down-up", self.update_moving_keymap, ["down", False])
         self.base.accept("space", self.fire_bullet, [self.bullet_vel])
-        
- 
+
     def update_moving_keymap(self, direction, state):
         '''Sets the direction of movement to the state (True or False)'''
         self.moving_keymap[direction] = state

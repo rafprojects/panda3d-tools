@@ -4,14 +4,14 @@ from eggmodel import Eggmodel
 
 
 class Entity(Eggmodel):
-    def __init__(self, HP, pos, scale, parent, base, model_file):
-        super().__init__(pos, scale, parent, base, model_file)
+    def __init__(self, HP, pos, scale, base, model_file):
+        super().__init__(pos, scale, base, model_file)
         self.HP = HP
         
 
 class Enemy(Entity):
-    def __init__(self, HP, pos, scale, parent, base, model_file, velocity):
-        super().__init__(HP, pos, scale, parent, base, model_file)
+    def __init__(self, HP, pos, scale, base, model_file, velocity):
+        super().__init__(HP, pos, scale, base, model_file)
         self.velocity = velocity
         
     def update_pos(self, dt):
@@ -32,16 +32,20 @@ class EnemySpawner():
         self.spawn_task = self.base.taskMgr.add(self.spawn_enemies, "spawn_enemies")
         
     def spawn_enemies(self, task):
-        x = random.uniform(self.spawn_area[0], self.spawn_area[1])
-        y = random.uniform(self.spawn_area[2], self.spawn_area[3])
-        enemy = self.enemy_class(
-            HP=10, 
-            pos=(x, 0, y), 
-            scale=3.0, 
-            parent=NodePath("enemy"), 
-            base=self.base, 
-            model_file='output/enemies/asteroid/asteroid', 
-            velocity=1.0)
-        self.enemies.append(enemy)
-        self.base.render.attachNewNode(enemy)
+        if len(self.enemies) < 20:
+            x = random.uniform(self.spawn_area[0], self.spawn_area[1])
+            y = random.uniform(self.spawn_area[2], self.spawn_area[3])
+            enemy = self.enemy_class(
+                HP=10, 
+                pos=(x, 0, y), 
+                scale=0.4, 
+                base=self.base, 
+                model_file='output/enemies/asteroid/asteroid', 
+                velocity=1.0)
+            self.enemies.append(enemy)
+            enemy.reparentTo(self.base.render)
+            print(self.enemies)
+        else:
+            # self.enemies = [bullet.removeNode() for bullet in self.enemies]
+            pass
         return task.again
