@@ -1,6 +1,6 @@
 import random
 
-from eggmodel import Eggmodel
+from .eggmodel import Eggmodel
 
 
 class Entity(Eggmodel):
