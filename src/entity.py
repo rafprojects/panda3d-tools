@@ -1,5 +1,5 @@
 import random
-from panda3d.core import NodePath
+
 from eggmodel import Eggmodel
 
 
@@ -40,7 +40,7 @@ class EnemySpawner():
                 pos=(x, 0, y), 
                 scale=0.4, 
                 base=self.base, 
-                model_file='output/enemies/asteroid/asteroid', 
+                model_file='assets/sprites/enemies/asteroid/asteroid', 
                 velocity=1.0)
             self.enemies.append(enemy)
             enemy.reparentTo(self.base.render)

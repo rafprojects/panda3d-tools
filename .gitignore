@@ -1,0 +1,11 @@
+# Non-project files & folders
+.vscode
+__pycache__
+
+# Project files & folders
+__storage__
+assets
+*.csv
+
+# Testfiles and such
+testgame.py

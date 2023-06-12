@@ -6,7 +6,10 @@ class Eggmodel(NodePath):
     def __init__(self, pos, scale, base, model_file):
         super().__init__("eggmodel")
         self.base = base
-        self.model = self.base.loader.loadModel(model_file)
+        try:
+            self.model = self.base.loader.loadModel(model_file)
+        except Exception as e:
+            print(f"Error loading egg model: {model_file}\n{e}")
         self.model.setPos(pos)
         self.model.setScale(scale)
         self.model.reparentTo(self)
