@@ -10,8 +10,7 @@ class Eggmodel(NodePath):
             self.model = self.base.loader.loadModel(model_file)
         except Exception as e:
             print(f"Error loading egg model: {model_file}\n{e}")
-        self.model.setPos(pos)
         self.model.setScale(scale)
-        self.reparentTo(self.base.render)
+        self.model.setPos(pos)
         self.model.reparentTo(self)
         

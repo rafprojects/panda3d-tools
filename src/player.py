@@ -1,4 +1,5 @@
 from .eggmodel import Eggmodel
+from .entity import Entity
 from .weapons import Bullet
 
 
@@ -9,11 +10,18 @@ class Player():
     def __init__(self, base, charId, player_model_file):
         self.base = base
         self.charId = charId
-        self.player_sprite = Eggmodel(base=base,  
-                                      pos=(0, 0, 0), 
-                                      scale=0.4, 
-                                      model_file=player_model_file)
-        self.player_sprite.reparentTo(self.base.render)
+        self.scale_factor = 0.4
+        self.player_entity = Entity(HP=100,
+                                  base=base,
+                                  pos=(0, 0, 0),
+                                  scale=self.scale_factor,
+                                  model_file=player_model_file,
+                                  entity_type='player'
+                                )
+        bounds = self.player_entity.getBounds()
+        print(f"PLAYER BOUNDS: {bounds}")
+        print(f"PLAYER CENTER: {bounds.getCenter()}")
+        self.player_entity.reparentTo(self.base.render)
         # Movement & animation variables
         self.move_speed = 200
         self.moving_keymap = {"left": False, "right": False, "up": False, "down": False}
@@ -25,6 +33,7 @@ class Player():
         # Track weapons
         self.bullets = []
         self.bullet_vel = 400
+        self.bullet_offset = (16, 15)  # align bullet to ship
         # Keypress event handlers
         self.base.accept("arrow_left", self.update_moving_keymap, ["left", True])
         self.base.accept("arrow_left-up", self.update_moving_keymap, ["left", False])
@@ -54,22 +63,25 @@ class Player():
             self.y += self.move_speed * dt
         if self.moving_keymap['down']:
             self.y -= self.move_speed * dt
-        self.player_sprite.model.setPos(self.x, 0, self.y)
+        self.player_entity.model.setPos(self.x, 0, self.y)
         return task.cont  # return task.cont to keep the task running
 
     def fire_bullet(self, vel):
-        print(self.player_sprite.model.getX() + 10, self.player_sprite.model.getZ() + 10)
-        bullet_coords = (self.player_sprite.model.getX() + 7, 0, self.player_sprite.model.getZ() + 15)
-        bullet = Bullet(self.base, 1.0, bullet_coords, vel, 'assets/sprites/weapons/bullet.egg')
-        print(f"SHOT BULLET AT {bullet.getPos()}")
+        # print(self.player_sprite.model.getX() + 10, self.player_sprite.model.getZ() + 10)
+        bullet_coords = (self.player_entity.model.getX() + self.bullet_offset[0], 
+                         0, 
+                         self.player_entity.model.getZ() + self.bullet_offset[1]
+                    )
+        bullet = Bullet(self.base, 0.5, bullet_coords, vel, self.bullet_offset, 'assets/sprites/weapons/bullet.egg')
+        # print(f"SHOT BULLET AT {bullet.getPos()}")
         bullet.reparentTo(self.base.render)
         self.bullets.append(bullet) 
-        print(f"NUM BULLETS: {len(self.bullets)}")
+        # print(f"NUM BULLETS: {len(self.bullets)}")
 
     def update_animation(self, task):
         dt = globalClock.getDt()
         self.animation_time += dt
-        seq_node = self.player_sprite.model.find('**/+SequenceNode').node()
+        seq_node = self.player_entity.model.find('**/+SequenceNode').node()
         # TODO: This is a bit of a mess, but it works for now.  Clean it up later.
         if self.moving_keymap['left']:
             if self.state != "left":
