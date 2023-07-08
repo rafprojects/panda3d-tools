@@ -1,5 +1,5 @@
-from panda3d.core import NodePath
-from eggmodel import Eggmodel
+from .eggmodel import Eggmodel
+from .weapons import Bullet
 
 
 class Player():
@@ -12,8 +12,8 @@ class Player():
         self.player_sprite = Eggmodel(base=base,  
                                       pos=(0, 0, 0), 
                                       scale=0.4, 
-                                      parent=self.base.render,
                                       model_file=player_model_file)
+        self.player_sprite.reparentTo(self.base.render)
         # Movement & animation variables
         self.move_speed = 200
         self.moving_keymap = {"left": False, "right": False, "up": False, "down": False}
@@ -35,8 +35,7 @@ class Player():
         self.base.accept("arrow_down", self.update_moving_keymap, ["down", True])
         self.base.accept("arrow_down-up", self.update_moving_keymap, ["down", False])
         self.base.accept("space", self.fire_bullet, [self.bullet_vel])
-        
- 
+
     def update_moving_keymap(self, direction, state):
         '''Sets the direction of movement to the state (True or False)'''
         self.moving_keymap[direction] = state
@@ -61,7 +60,7 @@ class Player():
     def fire_bullet(self, vel):
         print(self.player_sprite.model.getX() + 10, self.player_sprite.model.getZ() + 10)
         bullet_coords = (self.player_sprite.model.getX() + 7, 0, self.player_sprite.model.getZ() + 15)
-        bullet = Bullet(self.base, 1.0, bullet_coords, vel, 'output/weapons/bullet')
+        bullet = Bullet(self.base, 1.0, bullet_coords, vel, 'assets/sprites/weapons/bullet.egg')
         print(f"SHOT BULLET AT {bullet.getPos()}")
         bullet.reparentTo(self.base.render)
         self.bullets.append(bullet) 
@@ -105,16 +104,4 @@ class Player():
         return task.cont
 
 
-class Bullet(NodePath):
-    def __init__(self, base, scale, shipPos, vel, bullet_model):
-        super().__init__("bullet")
-        self.model = base.loader.loadModel(bullet_model)
-        self.model.reparentTo(self)
-        self.setPos(shipPos)
-        self.setScale(scale)
-        self.velocity = vel
-        self.setTwoSided(True)
-        
-    def update_pos(self, dt):
-        # print(f"Bullet pos: {self.getPos()}")
-        self.setZ(self.getZ() + self.velocity * dt)
+
