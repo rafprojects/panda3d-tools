@@ -60,7 +60,7 @@ class Player():
     def fire_bullet(self, vel):
         print(self.player_sprite.model.getX() + 10, self.player_sprite.model.getZ() + 10)
         bullet_coords = (self.player_sprite.model.getX() + 7, 0, self.player_sprite.model.getZ() + 15)
-        bullet = Bullet(self.base, 1.0, bullet_coords, vel, 'assets/sprites/weapons/bullet')
+        bullet = Bullet(self.base, 1.0, bullet_coords, vel, 'assets/sprites/weapons/bullet.egg')
         print(f"SHOT BULLET AT {bullet.getPos()}")
         bullet.reparentTo(self.base.render)
         self.bullets.append(bullet) 
