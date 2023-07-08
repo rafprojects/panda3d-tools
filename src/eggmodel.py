@@ -12,4 +12,6 @@ class Eggmodel(NodePath):
             print(f"Error loading egg model: {model_file}\n{e}")
         self.model.setPos(pos)
         self.model.setScale(scale)
+        self.reparentTo(self.base.render)
         self.model.reparentTo(self)
+        
