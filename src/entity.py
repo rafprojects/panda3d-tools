@@ -12,17 +12,18 @@ class Entity(Eggmodel):
         self.HP = HP
         self.scale = scale
         self.entity_type = entity_type
+        
         # Collision stuff
-        size_x, size_y = get_dimensions_from_egg(model_file, half=True)
+        size_x, size_y = get_dimensions_from_egg(model_file, half=False)
         self.collBox = CollisionBox(
             Point3(-size_x * self.scale, -0.5, -size_y * self.scale),
             Point3(size_x * self.scale, 0.5, size_y * self.scale)
         )
-        # self.collNode = 
-        self.collNodePath = self.model.attachNewNode(CollisionNode(self.entity_type))
+        self.collNode = CollisionNode(self.entity_type)
+        self.collNodePath = self.model.attachNewNode(self.collNode)
         self.collNodePath.node().addSolid(self.collBox)
-        # self.collNodePath.reparentTo(self)
         self.collNodePath.show()  # temporary show for debugging
+
 
 class Enemy(Entity):
     def __init__(self, HP, pos, scale, base, model_file, velocity):
