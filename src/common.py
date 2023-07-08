@@ -18,7 +18,22 @@ def get_dimensions_from_egg(eggfile, half=False):
 
 def get_box_dimensions(eggfile, scale_factor, offsetT=None):
     x, y = get_dimensions_from_egg(eggfile)
-    return ((-x*scale_factor, -0.5, -y*scale_factor), (x*scale_factor, 0.5, y*scale_factor))
-
+    if not offsetT:
+        return ((-x*scale_factor, -0.5, -y*scale_factor), (x*scale_factor, 0.5, y*scale_factor))
+    else: 
+        return (
+                (
+                    (-x+offsetT[0])*scale_factor, 
+                    -0.5, 
+                    (-y+offsetT[1])*scale_factor
+                ), 
+                (
+                    (x+offsetT[0])*scale_factor, 
+                    0.5, 
+                    (y+offsetT[1])*scale_factor
+                )
+                )
+    
+    
 # print(grab_text_file_line('assets/sprites/weapons/bullet.egg', 1))
 # print(get_dimensions_from_egg('assets/sprites/weapons/bullet.egg', half=True))

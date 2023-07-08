@@ -1,9 +1,8 @@
 import random
-import PIL
 from panda3d.core import CollisionBox, CollisionNode, Point3
 
 from .eggmodel import Eggmodel
-from .common import get_dimensions_from_egg
+from .common import get_box_dimensions
 
 
 class Entity(Eggmodel):
@@ -14,10 +13,10 @@ class Entity(Eggmodel):
         self.entity_type = entity_type
         
         # Collision stuff
-        size_x, size_y = get_dimensions_from_egg(model_file, half=False)
+        pointA, pointB = get_box_dimensions(eggfile=model_file, scale_factor=self.scale, offsetT=None)
         self.collBox = CollisionBox(
-            Point3(-size_x * self.scale, -0.5, -size_y * self.scale),
-            Point3(size_x * self.scale, 0.5, size_y * self.scale)
+            Point3(pointA[0], pointA[1], pointA[2]),
+            Point3(pointB[0], pointB[1], pointB[2])
         )
         self.collNode = CollisionNode(self.entity_type)
         self.collNodePath = self.model.attachNewNode(self.collNode)
