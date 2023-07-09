@@ -21,7 +21,7 @@ class Bullet(NodePath):
         self.HP = 1
 
         # Collision stuff
-        pointA, pointB = get_box_dimensions(eggfile=bullet_model, scale_factor=self.scale, offsetT=bullet_offset)
+        pointA, pointB = get_box_dimensions(eggfile=bullet_model, scale_factor=self.scale, offsetT=None)
         print(pointA, pointB)
         self.collBox = CollisionBox(
             Point3(pointA[0], pointA[1], pointA[2]),
