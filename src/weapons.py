@@ -5,7 +5,7 @@ from .common import get_box_dimensions
 
 
 class Bullet(NodePath):
-    def __init__(self, base, scale, shipPos, vel, bullet_offset, bullet_model):
+    def __init__(self, base, scale, shipPos, vel, bullet_offset, bullet_model, cTrav, cHandler):
         super().__init__("bullet")
         self.model = base.loader.loadModel(bullet_model)
         self.model.reparentTo(self)
@@ -30,6 +30,8 @@ class Bullet(NodePath):
         self.collNode = CollisionNode('bullet')
         self.collNode.addSolid(self.collBox)
         self.collNodePath = self.attachNewNode(self.collNode)
+        self.collNodePath.setPythonTag("bullet", self)
+        cTrav.addCollider(self.collNodePath, cHandler)
         self.collNodePath.show()   # temporary show for debugging
         
     def update_pos(self, dt):

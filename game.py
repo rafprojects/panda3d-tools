@@ -24,11 +24,24 @@ class Game():
         lens.setNearFar(-50, 50)
         self.base.cam.node().setLens(lens)
         
+        # Collision Handling Block
+        self.cTrav = CollisionTraverser()
+        self.collHandler = CollisionHandlerEvent()
+        self.collHandler.addInPattern('%fn-into-%in')
+        self.cTrav.showCollisions(self.base.render)
+        self.base.accept('bullet-into-enemy', self.bullet_enemy_collision)
+        
         # player block
-        self.player = Player(base=self.base, charId=0, player_model_file='assets/sprites/ship/ship.egg')
+        self.player = Player(base=self.base, 
+                             charId=0, 
+                             player_model_file='assets/sprites/ship/ship.egg', 
+                             cTrav=self.cTrav, 
+                             cHandler=self.collHandler
+                             )
         self.base.taskMgr.add(self.player.move_ship, "move_task")
         self.base.taskMgr.add(self.player.update_animation, "update_animation")
         self.base.taskMgr.add(self.player.update_bullets, "update_bullets")
+        self.base.taskMgr.add(self.traverse_collisions, "traverse_task")
         
         # enemy stuff
         self.enemies = []
@@ -36,18 +49,19 @@ class Game():
             base=self.base, 
             enemy_class=Enemy, 
             spawn_interval=300.0, 
-            spawn_area=(-300.0, 300.0, 50.0, 200.0))
+            spawn_area=(-300.0, 300.0, 50.0, 200.0),
+            cTrav=self.cTrav,
+            cHandler=self.collHandler
+            )
         
-        # Collision Handling Block
-        self.cTrav = CollisionTraverser()
-        self.collHandler = CollisionHandlerEvent()
-        self.collHandler.addInPattern('%fn-into-%in')
-        self.base.accept('bullet-into-enemy', self.bullet_enemy_collision)
-        
+    def traverse_collisions(self, task):
+        self.cTrav.traverse(self.base.render)
+        return task.cont
+           
     def bullet_enemy_collision(self, entry):
         """Handles the collision between a bullet and an enemy."""
-        bullet = entry.getFromNodePath().getPythonTag("owner")
-        enemy = entry.getIntoNodePath().getPythonTag("owner")
+        bullet = entry.getFromNodePath().getPythonTag("bullet")
+        enemy = entry.getIntoNodePath().getPythonTag("enemy")
 
         # Adjust HP or destroy the objects as needed
         bullet.HP -= 1

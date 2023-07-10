@@ -2,22 +2,25 @@ from .eggmodel import Eggmodel
 from .entity import Entity
 from .weapons import Bullet
 
+from .common import make_bounding_box, get_bounding_box_dimensions
 
 class Player():
     '''Player handles the player character. This includes the sprite, movement, 
     animations, and other player related functions.\n
     The movement speed, scale and position are hardcoded (currently)'''
-    def __init__(self, base, charId, player_model_file):
+    def __init__(self, base, charId, player_model_file, cTrav, cHandler):
         self.base = base
         self.charId = charId
         self.scale_factor = 0.4
         self.player_entity = Entity(HP=100,
-                                  base=base,
-                                  pos=(0, 0, 0),
-                                  scale=self.scale_factor,
-                                  model_file=player_model_file,
-                                  entity_type='player'
-                                )
+                                    base=base,
+                                    pos=(0, 0, 0),
+                                    scale=self.scale_factor,
+                                    model_file=player_model_file,
+                                    entity_type='player',
+                                    cTrav=cTrav,
+                                    cHandler=cHandler
+                                    )
         bounds = self.player_entity.getBounds()
         print(f"PLAYER BOUNDS: {bounds}")
         print(f"PLAYER CENTER: {bounds.getCenter()}")
@@ -33,7 +36,7 @@ class Player():
         # Track weapons
         self.bullets = []
         self.bullet_vel = 400
-        self.bullet_offset = (16, 15)  # align bullet to ship
+        self.bullet_offset = (0, 0)  # align bullet to ship
         # Keypress event handlers
         self.base.accept("arrow_left", self.update_moving_keymap, ["left", True])
         self.base.accept("arrow_left-up", self.update_moving_keymap, ["left", False])
@@ -44,6 +47,11 @@ class Player():
         self.base.accept("arrow_down", self.update_moving_keymap, ["down", True])
         self.base.accept("arrow_down-up", self.update_moving_keymap, ["down", False])
         self.base.accept("space", self.fire_bullet, [self.bullet_vel])
+        
+        self.cTrav = cTrav
+        self.cHandler = cHandler
+        # print(get_bounding_box_dimensions(self.player_entity))
+        # make_bounding_box(self.player_entity)
 
     def update_moving_keymap(self, direction, state):
         '''Sets the direction of movement to the state (True or False)'''
@@ -67,12 +75,19 @@ class Player():
         return task.cont  # return task.cont to keep the task running
 
     def fire_bullet(self, vel):
-        # print(self.player_sprite.model.getX() + 10, self.player_sprite.model.getZ() + 10)
         bullet_coords = (self.player_entity.model.getX() + self.bullet_offset[0], 
                          0, 
                          self.player_entity.model.getZ() + self.bullet_offset[1]
-                    )
-        bullet = Bullet(self.base, 0.5, bullet_coords, vel, self.bullet_offset, 'assets/sprites/weapons/bullet.egg')
+                        )
+        bullet = Bullet(self.base,
+                        0.5,
+                        bullet_coords,
+                        vel,
+                        self.bullet_offset,
+                        'assets/sprites/weapons/bullet.egg',
+                        cTrav=self.cTrav,
+                        cHandler=self.cHandler
+                        )
         # print(f"SHOT BULLET AT {bullet.getPos()}")
         bullet.reparentTo(self.base.render)
         self.bullets.append(bullet) 
@@ -99,7 +114,9 @@ class Player():
             if self.state != "idle":
                 seq_node.loop(True, 0, 1)
                 self.state = "idle"
+                
             self.animation_time = 0.0
+            # print(get_bounding_box_dimensions(self.player_entity))
 
         return task.cont
     
