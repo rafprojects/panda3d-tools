@@ -20,7 +20,7 @@ class Entity(Eggmodel):
         )
         self.collNode = CollisionNode(self.entity_type)
         self.collNodePath = self.model.attachNewNode(self.collNode)
-        self.collNodePath.setPythonTag(self.entity_type, self)
+        self.collNode.setPythonTag(self.entity_type, self.model)
         self.collNodePath.node().addSolid(self.collBox)
         cTrav.addCollider(self.collNodePath, cHandler)
         self.collNodePath.show()  # temporary show for debugging

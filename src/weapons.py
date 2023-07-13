@@ -30,7 +30,7 @@ class Bullet(NodePath):
         self.collNode = CollisionNode('bullet')
         self.collNode.addSolid(self.collBox)
         self.collNodePath = self.attachNewNode(self.collNode)
-        self.collNodePath.setPythonTag("bullet", self)
+        self.collNode.setPythonTag("bullet", self)
         cTrav.addCollider(self.collNodePath, cHandler)
         self.collNodePath.show()   # temporary show for debugging
         
