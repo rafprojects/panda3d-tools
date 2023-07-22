@@ -60,17 +60,27 @@ class Game():
            
     def bullet_enemy_collision(self, entry):
         """Handles the collision between a bullet and an enemy."""
-        bullet = entry.getFromNodePath().getPythonTag("bullet")
-        enemy = entry.getIntoNodePath().getPythonTag("enemy")
-
+        # NOTE: This isn't actually working yet
+        bullet_node = entry.getFromNodePath().getPythonTag("bullet")
+        enemy_node = entry.getIntoNodePath().getPythonTag("enemy")
+        print(f"COLLIDE: B-{bullet_node} | E-{enemy_node}")
+        # Handle Bullet
+        bullet = next((b for b in self.player.bullets if b.collNodePath == bullet_node), None)
+        if bullet:
+            print(f"FOUND BULLET: {bullet}")
         # Adjust HP or destroy the objects as needed
-        bullet.HP -= 1
-        enemy.HP -= 1
+            bullet.HP -= 1
+            if bullet.HP <= 0:
+                self.player.bullets.remove(bullet)
+                bullet.collNodePath.removeNode()
+        enemy = next((e for e in self.enemies if e.collNodePath == enemy_node), None)
+        if enemy:
+            print(f"COLLIDE ENEMY: {enemy}")
+            enemy.HP -= 10
+            if enemy.HP <= 0:
+                self.enemies.remove(enemy)
+                enemy.collNodePath.removeNode()
 
-        if bullet.HP <= 0:
-            bullet.destroy()
-        if enemy.HP <= 0:
-            enemy.destroy()
 
 # Game Init
 base = Base()
