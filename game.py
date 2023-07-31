@@ -11,6 +11,9 @@ loadPrcFile("config/conf.prc")
 class Base(ShowBase):
     def __init__(self):
         super().__init__()
+        
+        
+    
 
 
 class Game():
@@ -77,9 +80,11 @@ class Game():
         if enemy:
             print(f"COLLIDE ENEMY: {enemy}")
             enemy.HP -= 10
-            if enemy.HP <= 0:
+                self.player.bullets.remove(bullet)
+        if enemy.HP <= 0:
                 self.enemies.remove(enemy)
                 enemy.collNodePath.removeNode()
+            self.enemies.remove(enemy)
 
 
 # Game Init

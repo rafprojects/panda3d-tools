@@ -24,6 +24,11 @@ class Entity(Eggmodel):
         self.collNodePath.node().addSolid(self.collBox)
         cTrav.addCollider(self.collNodePath, cHandler)
         self.collNodePath.show()  # temporary show for debugging
+        self.alive = True  # tracking to aid destroying the object
+        
+    def destroy(self):
+        self.alive = False
+        self.model.removeNode()
         
         
 class Enemy(Entity):

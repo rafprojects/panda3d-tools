@@ -19,6 +19,7 @@ class Bullet(NodePath):
         self.velocity = vel
         self.setTwoSided(True)
         self.HP = 1
+        self.exists = True  # like "alive" for Entities
 
         # Collision stuff
         pointA, pointB = get_box_dimensions(eggfile=bullet_model, scale_factor=self.scale, offsetT=None)
@@ -38,3 +39,6 @@ class Bullet(NodePath):
         # print(f"Bullet pos: {self.getPos()}")
         self.setZ(self.getZ() + self.velocity * dt)
         
+    def destroy(self):
+        self.exists = False
+        self.model.removeNode()
