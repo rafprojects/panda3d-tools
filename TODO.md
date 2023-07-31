@@ -44,3 +44,8 @@
   - can use the yaml import methods made elsewhere
 
  
+
+## NEXT 
+
+- bullet collides and there's a reaction, but it crashes the game.
+Gotta fix this first

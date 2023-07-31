@@ -80,10 +80,9 @@ class Game():
         if enemy:
             print(f"COLLIDE ENEMY: {enemy}")
             enemy.HP -= 10
-                self.player.bullets.remove(bullet)
+            self.player.bullets.remove(bullet)
         if enemy.HP <= 0:
-                self.enemies.remove(enemy)
-                enemy.collNodePath.removeNode()
+            enemy.collNodePath.removeNode()
             self.enemies.remove(enemy)
 
 
