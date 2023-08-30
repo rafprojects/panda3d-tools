@@ -20,7 +20,7 @@ class Entity(Eggmodel):
         )
         self.collNode = CollisionNode(self.entity_type)
         self.collNodePath = self.model.attachNewNode(self.collNode)
-        self.collNode.setPythonTag(self.entity_type, self.model)
+        self.collNode.setPythonTag(self.entity_type, self)
         self.collNodePath.node().addSolid(self.collBox)
         cTrav.addCollider(self.collNodePath, cHandler)
         self.collNodePath.show()  # temporary show for debugging
@@ -35,6 +35,8 @@ class Enemy(Entity):
     def __init__(self, HP, pos, scale, base, model_file, entity_type, cTrav, cHandler, velocity):
         super().__init__(HP, pos, scale, base, model_file, entity_type, cTrav, cHandler)
         self.velocity = velocity
+        
+        
         # DBG
         # make_bounding_box(self)
         
@@ -46,19 +48,19 @@ class Enemy(Entity):
 
 
 class EnemySpawner():
-    def __init__(self, base, enemy_class, spawn_interval, spawn_area, cTrav, cHandler):
+    def __init__(self, base, game, enemy_class, spawn_interval, spawn_area, cTrav, cHandler):
         self.base = base
+        self.game = game
         self.enemy_class = enemy_class
         self.spawn_interval = spawn_interval
         self.spawn_area = spawn_area
         self.spawn_timer = 0.0
-        self.enemies = []
         self.spawn_task = self.base.taskMgr.add(self.spawn_enemies, "spawn_enemies")
         self.cTrav = cTrav
         self.cHandler = cHandler
         
     def spawn_enemies(self, task):
-        if len(self.enemies) < 20:
+        if len(self.game.enemies) < 20:
             x = random.uniform(self.spawn_area[0], self.spawn_area[1])
             y = random.uniform(self.spawn_area[2], self.spawn_area[3])
             enemy = self.enemy_class(
@@ -72,7 +74,7 @@ class EnemySpawner():
                 cTrav=self.cTrav,
                 cHandler=self.cHandler
             )
-            self.enemies.append(enemy)
+            self.game.enemies.append(enemy)
             enemy.reparentTo(self.base.render)
         else:
             # self.enemies = [bullet.removeNode() for bullet in self.enemies]

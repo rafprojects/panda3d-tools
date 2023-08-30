@@ -30,7 +30,7 @@ class Player():
         self.moving_keymap = {"left": False, "right": False, "up": False, "down": False}
         self.state = "idle"
         self.animation_time = 0.0
-        # Track the player's position
+        # Track player position
         self.x = 0
         self.y = 0
         # Track weapons
@@ -50,6 +50,7 @@ class Player():
         
         self.cTrav = cTrav
         self.cHandler = cHandler
+        # DEBUG STUFF
         # print(get_bounding_box_dimensions(self.player_entity))
         # make_bounding_box(self.player_entity)
 

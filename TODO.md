@@ -48,4 +48,8 @@
 ## NEXT 
 
 - bullet collides and there's a reaction, but it crashes the game.
-Gotta fix this first
+ERROR:
+File "/home/raf/projects/py_projects/pandas_learn/game.py", line 81, in bullet_enemy_collision
+    if enemy.HP <= 0:
+AttributeError: 'NoneType' object has no attribute 'HP'
+- Gotta fix this first
