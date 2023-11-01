@@ -1,6 +1,7 @@
 # Non-project files & folders
 .vscode
 __pycache__
+*.pyc
 
 # Project files & folders
 __storage__
