@@ -1,30 +1,23 @@
 from .eggmodel import Eggmodel
 from .entity import Entity
 from .weapons import Bullet
-
 from .common import make_bounding_box, get_bounding_box_dimensions
 
-class Player():
+
+class Player(Entity):
     '''Player handles the player character. This includes the sprite, movement, 
     animations, and other player related functions.\n
     The movement speed, scale and position are hardcoded (currently)'''
-    def __init__(self, base, charId, player_model_file, cTrav, cHandler):
+    def __init__(self, base, charId, entity_type, model_file, cTrav, cHandler, HP=100, pos=(0, 0, 0), scale=0.4):
+        super().__init__(HP, pos, scale, base, model_file, entity_type, cTrav, cHandler)
         self.base = base
         self.charId = charId
-        self.scale_factor = 0.4
-        self.player_entity = Entity(HP=100,
-                                    base=base,
-                                    pos=(0, 0, 0),
-                                    scale=self.scale_factor,
-                                    model_file=player_model_file,
-                                    entity_type='player',
-                                    cTrav=cTrav,
-                                    cHandler=cHandler
-                                    )
-        bounds = self.player_entity.getBounds()
-        print(f"PLAYER BOUNDS: {bounds}")
-        print(f"PLAYER CENTER: {bounds.getCenter()}")
-        self.player_entity.reparentTo(self.base.render)
+        # self.scale_factor = 0.4
+        
+        # bounds = self.getBounds()
+        # print(f"PLAYER BOUNDS: {bounds}")
+        # print(f"PLAYER CENTER: {bounds.getCenter()}")
+        self.reparentTo(self.base.render)
         # Movement & animation variables
         self.move_speed = 200
         self.moving_keymap = {"left": False, "right": False, "up": False, "down": False}
@@ -50,7 +43,7 @@ class Player():
         
         self.cTrav = cTrav
         self.cHandler = cHandler
-        # DEBUG STUFF
+        self.last_collision = 0
         # print(get_bounding_box_dimensions(self.player_entity))
         # make_bounding_box(self.player_entity)
 
@@ -72,13 +65,13 @@ class Player():
             self.y += self.move_speed * dt
         if self.moving_keymap['down']:
             self.y -= self.move_speed * dt
-        self.player_entity.model.setPos(self.x, 0, self.y)
+        self.model.setPos(self.x, 0, self.y)
         return task.cont  # return task.cont to keep the task running
 
     def fire_bullet(self, vel):
-        bullet_coords = (self.player_entity.model.getX() + self.bullet_offset[0], 
+        bullet_coords = (self.model.getX() + self.bullet_offset[0], 
                          0, 
-                         self.player_entity.model.getZ() + self.bullet_offset[1]
+                         self.model.getZ() + self.bullet_offset[1]
                         )
         bullet = Bullet(self.base,
                         0.5,
@@ -89,15 +82,13 @@ class Player():
                         cTrav=self.cTrav,
                         cHandler=self.cHandler
                         )
-        # print(f"SHOT BULLET AT {bullet.getPos()}")
         bullet.reparentTo(self.base.render)
-        self.bullets.append(bullet) 
-        # print(f"NUM BULLETS: {len(self.bullets)}")
+        self.bullets.append(bullet)
 
     def update_animation(self, task):
         dt = globalClock.getDt()
         self.animation_time += dt
-        seq_node = self.player_entity.model.find('**/+SequenceNode').node()
+        seq_node = self.model.find('**/+SequenceNode').node()
         # TODO: This is a bit of a mess, but it works for now.  Clean it up later.
         if self.moving_keymap['left']:
             if self.state != "left":
@@ -115,12 +106,11 @@ class Player():
             if self.state != "idle":
                 seq_node.loop(True, 0, 1)
                 self.state = "idle"
-                
+        
             self.animation_time = 0.0
             # print(get_bounding_box_dimensions(self.player_entity))
-
         return task.cont
-    
+
     def update_bullets(self, task):
         dt = globalClock.getDt()
         for bullet in self.bullets:
@@ -132,6 +122,3 @@ class Player():
                 self.bullets[0].removeNode()
                 self.bullets.remove(self.bullets[0])
         return task.cont
-
-
-

@@ -11,7 +11,7 @@ class Entity(Eggmodel):
         self.HP = HP
         self.scale = scale
         self.entity_type = entity_type
-        
+    
         # Collision stuff
         pointA, pointB = get_box_dimensions(eggfile=model_file, scale_factor=self.scale, offsetT=None)
         self.collBox = CollisionBox(
@@ -25,12 +25,13 @@ class Entity(Eggmodel):
         cTrav.addCollider(self.collNodePath, cHandler)
         self.collNodePath.show()  # temporary show for debugging
         self.alive = True  # tracking to aid destroying the object
-        
+        self.last_collision = 0
+    
     def destroy(self):
         self.alive = False
         self.model.removeNode()
-        
-        
+
+
 class Enemy(Entity):
     def __init__(self, HP, pos, scale, base, model_file, entity_type, cTrav, cHandler, velocity):
         super().__init__(HP, pos, scale, base, model_file, entity_type, cTrav, cHandler)
@@ -39,7 +40,7 @@ class Enemy(Entity):
         
         # DBG
         # make_bounding_box(self)
-        
+    
     def update_pos(self, dt):
         self.setZ(self.getZ() - self.velocity * dt)
     
@@ -48,19 +49,19 @@ class Enemy(Entity):
 
 
 class EnemySpawner():
-    def __init__(self, base, game, enemy_class, spawn_interval, spawn_area, cTrav, cHandler):
+    def __init__(self, base, enemy_class, spawn_interval, spawn_area, cTrav, cHandler, enemyL):
         self.base = base
-        self.game = game
         self.enemy_class = enemy_class
         self.spawn_interval = spawn_interval
         self.spawn_area = spawn_area
         self.spawn_timer = 0.0
+        self.enemies = enemyL
         self.spawn_task = self.base.taskMgr.add(self.spawn_enemies, "spawn_enemies")
         self.cTrav = cTrav
         self.cHandler = cHandler
-        
+    
     def spawn_enemies(self, task):
-        if len(self.game.enemies) < 20:
+        if len(self.enemies) < 20:
             x = random.uniform(self.spawn_area[0], self.spawn_area[1])
             y = random.uniform(self.spawn_area[2], self.spawn_area[3])
             enemy = self.enemy_class(
@@ -74,10 +75,9 @@ class EnemySpawner():
                 cTrav=self.cTrav,
                 cHandler=self.cHandler
             )
-            self.game.enemies.append(enemy)
+            self.enemies.append(enemy)
             enemy.reparentTo(self.base.render)
         else:
             # self.enemies = [bullet.removeNode() for bullet in self.enemies]
             pass
         return task.again
-    
