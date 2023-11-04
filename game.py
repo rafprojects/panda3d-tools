@@ -42,13 +42,16 @@ class Game():
                              cTrav=self.cTrav,
                              cHandler=self.collHandler
                              )
+        # Task Manager
         self.base.taskMgr.add(self.player.move_ship, "move_task")
         self.base.taskMgr.add(self.player.update_animation, "update_animation")
         self.base.taskMgr.add(self.player.update_bullets, "update_bullets")
         self.base.taskMgr.add(self.traverse_collisions, "traverse_task")
         
         # enemy stuff
+        self.enemy_limit = 10
         self.enemies = []  # central enemy list
+        self.enemy_ids_global = []
         self.enemy_spawner = EnemySpawner(
             base=self.base,
             enemy_class=Enemy,
@@ -56,7 +59,9 @@ class Game():
             spawn_area=(-300.0, 300.0, 50.0, 200.0),
             cTrav=self.cTrav,
             cHandler=self.collHandler,
-            enemyL=self.enemies
+            enemyL=self.enemies,
+            global_enemy_idsL=self.enemy_ids_global,
+            enemy_limit=self.enemy_limit
         )
         # print(self.enemy_spawner.enemies)
         # self.enemies.extend(self.enemy_spawner.enemies)
@@ -81,6 +86,7 @@ class Game():
             if enemy.HP <= 0:
                 enemy.removeNode()
                 self.enemies.remove(enemy)
+                self.base.taskMgr.remove('update_enemy_{}'.format(enemy.id))
 
     def player_enemy_collision(self, entry):
         enemy_node = entry.getIntoNodePath().getPythonTag("enemy")
@@ -105,9 +111,12 @@ class Game():
                 # print("Enemy destroyed")
                 enemy.removeNode()
                 self.enemies.remove(enemy)
+                self.base.taskMgr.remove('update_enemy_{}'.format(enemy.id))
             if player.HP <= 0:
                 print("Player died")
 
+    # def update_enemies():
+        
 
 # Game Init
 base = Base()
