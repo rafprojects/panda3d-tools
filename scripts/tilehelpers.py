@@ -40,7 +40,7 @@ base_rock_shape = [
 
 def save_img(img, save_location, img_name):
     if save_location:
-        img.save(f'{save_location}/{img_name}2-4-6.png')
+        img.save(f'{save_location}/{img_name}.png')
     else:
         img.save(f'{img_name}.png')
 
