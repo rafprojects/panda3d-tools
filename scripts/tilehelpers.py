@@ -45,27 +45,42 @@ def save_img(img, save_location, img_name):
         img.save(f'{img_name}.png')
 
 
-def get_simplex_color(type, i, j, scale, color_range, i_inc=0, j_inc=0, variance=False, palette_var_thresh_A=None, palette_var_thresh_B=None):
-        """scale determines "zoom level", smaller = larger patterns"""
-        # Gen noise val btwn -1 to 1
-        simplex_gen = OpenSimplex(seed=random.randint(0, 1000))
-        noise_value = simplex_gen.noise2((i / scale) + i_inc, (j / scale) + j_inc)
-        color_idx = 0
-        if variance:
-            # palette = color_range
-            palette, scaled_noise_val = palette_by_noise_val(
-                type=type,
-                noise_val=noise_value,
-                palettesD=palettesD,
-                threshold_A=palette_var_thresh_A,
-                threshold_B=palette_var_thresh_B
-            )
-            color_idx = int(scaled_noise_val * len(palette))
-        else:
-            # scale noise val to range of palette
-            color_idx = int((noise_value + 1) / 2 * len(color_range))
-        # return color from palette
-        return color_range[color_idx]
+def get_simplex_color(tile_type, i, j, scale, color_range, i_inc=0, j_inc=0, variance=False, palette_thresholds={}):
+    """
+    Get the color based on simplex noise.
+
+    Args:
+        tile_type (str): Type of the tile.
+        i (int): X-coordinate.
+        j (int): Y-coordinate.
+        scale (float): Scale for noise generation.
+        color_range (list): List of colors.
+        i_inc (int, optional): Increment for i. Defaults to 0.
+        j_inc (int, optional): Increment for j. Defaults to 0.
+        variance (bool, optional): Whether to use variance. Defaults to False.
+        palette_thresholds (dict, optional): Dictionary with 'A' and 'B' thresholds. Defaults to None.
+
+    Returns:
+        color: Color from the palette.
+    """
+    #scale determines "zoom level", smaller = larger patterns
+    # Gen noise val btwn -1 to 1
+    simplex_gen = OpenSimplex(seed=random.randint(0, 1000))
+    noise_value = simplex_gen.noise2((i / scale) + i_inc, (j / scale) + j_inc)
+
+    if variance:
+        palette, scaled_noise_val = palette_by_noise_val(
+            tile_type=tile_type,
+            noise_val=noise_value,
+            palettesD=palettesD,
+            threshold_a=palette_thresholds['A'],
+            threshold_b=palette_thresholds['B']
+        )
+        color_idx = int(scaled_noise_val * len(palette))
+    else:
+        color_idx = int((noise_value + 1) / 2 * len(color_range)) # scale noise val to range of palette
+
+    return color_range[color_idx]
     
     
 def get_other_pixel_colors(img, prev, up, down):
@@ -73,21 +88,31 @@ def get_other_pixel_colors(img, prev, up, down):
     return img.getpixel(prev), img.getpixel(up), img.getpixel(down)
 
 
-def palette_by_noise_val(type, noise_val, palettesD, threshold_A, threshold_B):
+def palette_by_noise_val(tile_type, noise_val, palettesD, threshold_a, threshold_b):
+    """
+    Get the palette based on noise value.
+
+    Args:
+        tile_type (str): Type of the tile.
+        noise_val (float): Noise value.
+        palettes_dict (dict): Dictionary of palettes.
+        threshold_a (float): Threshold A.
+        threshold_b (float): Threshold B.
+
+    Returns:
+        tuple: Palette and scaled noise value.
+    """
     scaled_noise_val = (noise_val + 1) / 2
-    print(scaled_noise_val)
-    variations = tile_settings.get(type, {})
+    variations = tile_settings.get(tile_type, {})
+    
     if variations:
-        type_variationsL = tile_settings[type]['variations']
-        print(type_variationsL)
-        if scaled_noise_val < threshold_A:
-            print(type_variationsL[0])
+        type_variationsL = tile_settings[tile_type]['variations']
+        if scaled_noise_val < threshold_a:
             return palettesD[type_variationsL[0]], scaled_noise_val
-        elif scaled_noise_val < threshold_B:
-            print(type_variationsL[1])
+        elif scaled_noise_val < threshold_b:
             return palettesD[type_variationsL[1]], scaled_noise_val
     else:
-        return palettesD[type], scaled_noise_val
+        return palettesD[tile_type], scaled_noise_val
 
 
 def draw_grass_blade(draw, x, y, direction, color, length_factor=1.0):

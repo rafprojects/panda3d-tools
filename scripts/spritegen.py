@@ -122,14 +122,13 @@ def gen_simple_tile(img_obj, tile_type, variance=False, simplex_enabled=False, s
         for j in range(height):
             if simplex_enabled:
                 color = get_simplex_color(
-                    type=tile_type,
+                    tile_type=tile_type,
                     i=i,
                     j=j,
                     scale=simplex_scale,
                     color_range=color_range,
                     variance=variance,
-                    palette_var_thresh_A=palette_var_thresh_A,
-                    palette_var_thresh_B=palette_var_thresh_B
+                    palette_thresholds={'A': palette_var_thresh_A, 'B': palette_var_thresh_B}
                 )
             else:
                 color = random.choice(color_range)
@@ -296,6 +295,6 @@ def gen_grass_tile(draw_obj, direction='straight'):
 tg = TileCanvasGenerator(64, 64)
 tile = tg.make_empty_tile()
 
-# gen_simple_tile(tile, tile_type='sand', variance=True, simplex_enabled=True, simplex_scale=2, palette_var_thresh_A=4, palette_var_thresh_B=6, save=True, save_location='tile_gen')
-generate_brick_pattern(tile, size=(128, 128), brick_count_x=18, brick_count_y=30, brick_color=(150, 75, 50), mortar_color=(200, 200, 200), mortar_size=1, light_direction='top', top_mortar=True, save=True, save_location='tile_gen')
+gen_simple_tile(tile, tile_type='dirt', variance=True, simplex_enabled=True, simplex_scale=2, palette_var_thresh_A=4, palette_var_thresh_B=10, save=True, save_location='tile_gen')
+# generate_brick_pattern(tile, size=(128, 128), brick_count_x=18, brick_count_y=30, brick_color=(150, 75, 50), mortar_color=(200, 200, 200), mortar_size=1, light_direction='top', top_mortar=True, save=True, save_location='tile_gen')
 # generate_rand_template(64, 64, True)
