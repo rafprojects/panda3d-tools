@@ -30,6 +30,13 @@ tile_settings = {
     }
 }
 
+light_directions = {
+    'bottom-right': (1, 1),
+    'top-left': (-1, -1),
+    'top-right': (1, -1),
+    'bottom-left': (-1, 1)
+}
+
 base_rock_shape = [
     [1, 1, 1, 1],
     [1, 1, 1, 1],
@@ -79,7 +86,11 @@ def get_simplex_color(tile_type, i, j, scale, color_range, i_inc=0, j_inc=0, var
         color_idx = int(scaled_noise_val * len(palette))
     else:
         color_idx = int((noise_value + 1) / 2 * len(color_range)) # scale noise val to range of palette
-
+    
+    # Ensure color_idx is within the valid range
+    color_idx = min(max(color_idx, 0), len(color_range) - 1)
+    
+    # print("SIMPLEX COLOR IDX: ", color_idx)
     return color_range[color_idx]
     
     
