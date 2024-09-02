@@ -45,13 +45,14 @@ class Enemy(Entity):
         # Movement
         self.velocity = velocity
         self.direction = None
-        self.max_speed = 30
-        self.max_direction = 10
+        self.max_speed = 50
+        self.max_direction = 20
         
         self.movement_behavior = movement_behavior
-        self.radius = 15 # for circ mvmt
-        self.amplitude = 6
-        self.frequency = 10
+        self.radius = 0.2 # for circ mvmt
+        self.angle = 0 # for circ mvmt
+        self.amplitude = 6 # for sinusoidal mvmt
+        self.frequency = 10 # for sinusoidal mvmt
         
         self.change_interval = 3
         
@@ -59,10 +60,17 @@ class Enemy(Entity):
         # make_bounding_box(self)
     def update_pos(self, dt):
         self.movement_behavior.move(self, dt)
-        # angle = (globalClock.getFrameTime() * self.velocity) % 360
-        # x = math.cos(math.radians(angle)) * self.radius
-        # y = math.sin(math.radians(angle)) * self.radius
-        # self.setPos(x, y, self.getZ())
+        
+        # Boundary Check
+        min_x, max_x = -50, 50
+        min_y, max_y = -50, 50
+        min_z, max_z = -50, 50
+        
+        x, y, z = self.getPos()
+        x = max(min(x, max_x), min_x)
+        y = max(min(y, max_y), min_y)
+        z = max(min(z, max_z), min_z)
+        self.setPos(x, y, z)
     
     def fire(self):
         pass
@@ -106,7 +114,7 @@ class EnemySpawner():
             x = random.uniform(self.spawn_area[0], self.spawn_area[1])
             y = random.uniform(self.spawn_area[2], self.spawn_area[3])
             # mvmt_f = StraightDown()
-            mvmt_f = CircularMovement()
+            mvmt_f = LinearMovement(peak_x=50, speed=50)
             enemy = self.enemy_class(
                 HP=10,
                 pos=(x, 0, y),
@@ -114,7 +122,7 @@ class EnemySpawner():
                 base=self.base,
                 model_file='assets/sprites/enemies/asteroid/asteroid.egg',
                 entity_type='enemy',
-                velocity=25.0,
+                velocity=100,
                 cTrav=self.cTrav,
                 cHandler=self.cHandler,
                 movement_behavior=mvmt_f
