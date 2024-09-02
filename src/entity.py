@@ -4,7 +4,7 @@ from panda3d.core import CollisionBox, CollisionNode, Point3, GeomNode, Bounding
 
 from .eggmodel import Eggmodel
 from .common import get_box_dimensions, make_bounding_box
-from .movement import StraightDown, SinusoidalMovement, LinearMovement
+from .movement import StraightDown, SinusoidalMovement, LinearMovement, CircularMovement, RandomMovement
 
 
 class Entity(Eggmodel):
@@ -52,6 +52,8 @@ class Enemy(Entity):
         self.radius = 15 # for circ mvmt
         self.amplitude = 6
         self.frequency = 10
+        
+        self.change_interval = 3
         
         # DBG
         # make_bounding_box(self)
@@ -103,7 +105,8 @@ class EnemySpawner():
             
             x = random.uniform(self.spawn_area[0], self.spawn_area[1])
             y = random.uniform(self.spawn_area[2], self.spawn_area[3])
-            mvmt_f = StraightDown()
+            # mvmt_f = StraightDown()
+            mvmt_f = CircularMovement()
             enemy = self.enemy_class(
                 HP=10,
                 pos=(x, 0, y),
@@ -116,7 +119,7 @@ class EnemySpawner():
                 cHandler=self.cHandler,
                 movement_behavior=mvmt_f
             )
-            print(enemy.id)
+            # print(enemy.id)
             self.enemy_ids_sub.append(enemy.id)
             self.enemies.append(enemy)
             enemy.reparentTo(self.base.render)

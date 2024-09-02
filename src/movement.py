@@ -28,7 +28,8 @@ class CircularMovement(MovementBehavior):
 
 class RandomMovement(MovementBehavior):
     def move(self, enemy, dt):
-        if dt % enemy.change_interval == 0:
+        print(dt)
+        if dt % enemy.change_interval != 0:
             enemy.speed = random.uniform(-enemy.max_speed, enemy.max_speed)
             enemy.direction = random.uniform(-enemy.max_direction, enemy.max_direction)
 
