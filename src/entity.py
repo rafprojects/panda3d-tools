@@ -62,9 +62,9 @@ class Enemy(Entity):
         self.movement_behavior.move(self, dt)
         
         # Boundary Check
-        min_x, max_x = -50, 50
+        min_x, max_x = -350, 350
         min_y, max_y = -50, 50
-        min_z, max_z = -50, 50
+        min_z, max_z = -450, 450
         
         x, y, z = self.getPos()
         x = max(min(x, max_x), min_x)
@@ -114,15 +114,15 @@ class EnemySpawner():
             x = random.uniform(self.spawn_area[0], self.spawn_area[1])
             y = random.uniform(self.spawn_area[2], self.spawn_area[3])
             # mvmt_f = StraightDown()
-            mvmt_f = LinearMovement(peak_x=50, speed=50)
+            mvmt_f = SinusoidalMovement(amplitude=200, frequency=0.1, speed=1.0)
             enemy = self.enemy_class(
-                HP=10,
+                HP=1,
                 pos=(x, 0, y),
                 scale=0.4,
                 base=self.base,
                 model_file='assets/sprites/enemies/asteroid/asteroid.egg',
                 entity_type='enemy',
-                velocity=100,
+                velocity=30,
                 cTrav=self.cTrav,
                 cHandler=self.cHandler,
                 movement_behavior=mvmt_f

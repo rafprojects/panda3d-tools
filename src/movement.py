@@ -1,6 +1,6 @@
 import math
 import random
-from .movement_eases import quadratic_ease_io, cubic_ease_in_out, exponential_ease_in_out, back_ease_in_out, bounce_inverted_ease_in_out, hermite_ease, exponential_back_ease_in_out
+from .movement_eases import quadratic_ease_io, cubic_ease_in_out, exponential_ease_in_out, back_ease_in_out, bounce_inverted_ease_in_out, hermite_ease, exponential_back_ease_in_out, linear_ease
 
 
 class MovementBehavior:
@@ -53,10 +53,43 @@ class LinearMovement(MovementBehavior):
 
 
 class SinusoidalMovement(MovementBehavior):
+    def __init__(self, amplitude, frequency, ease_in_power=2, ease_out_power=2, speed=1.0, y_speed=7.0):
+        self.amplitude = amplitude
+        self.frequency = frequency
+        self.elapsed_time = 0.0
+        self.ease_in_power = ease_in_power
+        self.ease_out_power = ease_out_power
+        self.speed = speed  # Speed factor to control movement speed
+        self.y_speed = y_speed  # Speed factor to control vertical movement speed
+        self.base_x = None  # To store the initial X position of the enemy
+    
     def move(self, enemy, dt):
-        x = enemy.getX() + math.sin(globalClock.getFrameTime() * enemy.frequency) * enemy.amplitude
-        z = enemy.getZ() - enemy.velocity * dt  # Assuming y is the forward movement
-        enemy.setPos(x, enemy.getY(), z)
+        # Store the base X position once
+        if self.base_x is None:
+            self.base_x = enemy.getX()
+        
+        # Update elapsed time based on speed
+        self.elapsed_time += dt * self.speed
+        
+        # Normalize time based on frequency and use easing
+        t = (self.elapsed_time * self.frequency) % 1.0  # Normalized time for one full cycle (0 to 1)
+        eased_t = quadratic_ease_io(t, self.ease_in_power, self.ease_out_power)
+        
+        # Calculate new X position using eased time
+        x_offset = math.sin(eased_t * 2 * math.pi) * self.amplitude
+        new_x = self.base_x + x_offset
+        
+        # Smoothly update the enemy's X position
+        enemy.setX(new_x)
+        
+        # Update Y position for downward movement
+        new_y = enemy.getZ() - self.y_speed * dt
+        enemy.setZ(new_y)
+        
+        # Debugging Output
+        # print(f"x_offset: {x_offset}, t: {t}, eased_t: {eased_t}, new_x: {new_x}")
+
+
 
 class CircularMovement(MovementBehavior):
     def move(self, enemy, dt):
