@@ -90,16 +90,67 @@ class SinusoidalMovement(MovementBehavior):
         # print(f"x_offset: {x_offset}, t: {t}, eased_t: {eased_t}, new_x: {new_x}")
 
 
-
 class CircularMovement(MovementBehavior):
+    def __init__(self, radius, frequency, descent_speed=0.0, ease_in_power=2, ease_out_power=2, speed=1.0):
+        self.radius = radius
+        self.frequency = frequency  # Number of full circles per second
+        self.descent_speed = descent_speed  # Units per second
+        self.speed = speed  # Speed multiplier
+        self.elapsed_time = 0.0
+        self.ease_in_power = ease_in_power
+        self.ease_out_power = ease_out_power
+        self.base_x = None  # Center X position of the circular path
+        self.base_z = None  # Center Z position of the circular path
+
     def move(self, enemy, dt):
-        if not hasattr(enemy, 'angle'):
-            enemy.angle = 0  # Initialize the angle if not present
-        
-        enemy.angle += enemy.velocity * dt  # Increment the angle over time
-        x = math.cos(math.radians(enemy.angle)) * enemy.radius
-        y = math.sin(math.radians(enemy.angle)) * enemy.radius
-        enemy.setPos(enemy.getX() + x, enemy.getY(), enemy.getZ() + y)
+        """
+        Updates the enemy's position to follow a circular path with optional vertical descent.
+
+        :param enemy: The enemy object to move.
+        :param dt: Delta time since the last frame (in seconds).
+        """
+        # Initialize base positions on the first frame
+        if self.base_x is None or self.base_z is None:
+            self.base_x = enemy.getX()
+            self.base_z = enemy.getZ()
+
+        # Update elapsed time with speed multiplier
+        self.elapsed_time += dt * self.speed
+
+        # Calculate normalized time `t` based on frequency (cycles per second)
+        t = (self.elapsed_time * self.frequency) % 1.0  # Range: [0.0, 1.0)
+
+        # Apply easing to the normalized time
+        eased_t = linear_ease(t)
+
+        # Calculate the current angle in radians for the circular path
+        angle = eased_t * 2 * math.pi  # Full circle: 0 to 2π radians
+
+        # Compute the new X and Z positions based on the circular path
+        new_x = self.base_x + self.radius * math.cos(angle)
+        new_z = self.base_z + self.radius * math.sin(angle)
+
+        # Apply vertical descent by updating the base Z position
+        if self.descent_speed != 0.0:
+            self.base_z -= self.descent_speed * dt  # Descend downward over time
+
+            # Update the new Z position relative to the descending base_z
+            new_z = self.base_z + self.radius * math.sin(angle)
+
+        # Update the enemy's position in the X-Z plane
+        enemy.setX(new_x)
+        enemy.setZ(new_z)
+
+        # Ensure Y-axis remains constant (no movement along Y)
+        # If necessary, explicitly set Y to its initial value
+        # For example:
+        # enemy.setY(initial_y)
+
+        # Debugging Output
+        # print(f"Angle: {math.degrees(angle):.2f}°, t: {t:.2f}, eased_t: {eased_t:.2f}, "
+        #       f"New X: {new_x:.2f}, New Z: {new_z:.2f}, Base Z: {self.base_z:.2f}")
+
+
 
 class RandomMovement(MovementBehavior):
     def move(self, enemy, dt):

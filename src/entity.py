@@ -114,7 +114,7 @@ class EnemySpawner():
             x = random.uniform(self.spawn_area[0], self.spawn_area[1])
             y = random.uniform(self.spawn_area[2], self.spawn_area[3])
             # mvmt_f = StraightDown()
-            mvmt_f = SinusoidalMovement(amplitude=200, frequency=0.1, speed=1.0)
+            mvmt_f = CircularMovement(radius=60, frequency=0.5, descent_speed=5, speed=1, ease_in_power=2, ease_out_power=2)
             enemy = self.enemy_class(
                 HP=1,
                 pos=(x, 0, y),
