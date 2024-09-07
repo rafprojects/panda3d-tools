@@ -70,7 +70,8 @@ class Game():
                              entity_type='player',
                              model_file='assets/sprites/ship/ship.egg',
                              cTrav=self.coll_traverser,
-                             cHandler=self.coll_handler
+                             cHandler=self.coll_handler,
+                             playfield_bounds=self.playfield_bounds
                              )
         # TASK MANAGER
         self._base.taskMgr.add(self.player.move_ship, "move_task")

@@ -8,7 +8,7 @@ class Player(Entity):
     '''Player handles the player character. This includes the sprite, movement, 
     animations, and other player related functions.\n
     The movement speed, scale and position are hardcoded (currently)'''
-    def __init__(self, base, charId, entity_type, model_file, cTrav, cHandler, HP=100, pos=(0, 0, 0), scale=0.4):
+    def __init__(self, base, charId, entity_type, model_file, cTrav, cHandler, HP=100, pos=(0, 0, 0), scale=0.4, playfield_bounds=None):
         super().__init__(HP, pos, scale, base, model_file, entity_type, cTrav, cHandler)
         self.base = base
         self.charId = charId
@@ -26,6 +26,7 @@ class Player(Entity):
         # Track player position
         self.x = 0
         self.y = 0
+        self.playfield_bounds = playfield_bounds
         # Track weapons
         self.bullets = []
         self.bullet_vel = 400
@@ -65,12 +66,17 @@ class Player(Entity):
             self.y += self.move_speed * dt
         if self.moving_keymap['down']:
             self.y -= self.move_speed * dt
+            
+        # Clamp the player position within the playfield boundaries
+        self.x = max(self.playfield_bounds['left'], min(self.x, self.playfield_bounds['right']))
+        self.y = max(self.playfield_bounds['bottom'], min(self.y, self.playfield_bounds['top']))
+        
         self.model.setPos(self.x, 0, self.y)
-        return task.cont  # return task.cont to keep the task running
+        return task.cont
 
     def fire_bullet(self, vel):
-        bullet_coords = (self.model.getX() + self.bullet_offset[0], 
-                         0, 
+        bullet_coords = (self.model.getX() + self.bullet_offset[0],
+                         0,
                          self.model.getZ() + self.bullet_offset[1]
                         )
         bullet = Bullet(self.base,
