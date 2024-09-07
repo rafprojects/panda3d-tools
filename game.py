@@ -4,28 +4,20 @@ from panda3d.core import loadPrcFile, OrthographicLens
 from panda3d.core import CollisionTraverser, CollisionHandlerEvent, CollisionNode, CollisionPlane, Plane, Vec3, Point3, BitMask32
 from src.player import Player
 from src.entity import Enemy, EnemySpawner
-from src.collision import handle_bullet, handle_enemy, get_bullet_and_enemy_from_entry
 
-
-loadPrcFile("config/conf.prc")
-
+loadPrcFile("config/conf.prc") # Load the Panda3D config file
 
 class Base(ShowBase):
     """The base class for the game, separated in case of future expansion."""
     def __init__(self):
         super().__init__()
 
-
 class Game():
     '''The main game class.  This class encapsulates all non built-in game classes and their logic.'''
-    def __init__(self, base):
+    def __init__(self, base_obj):
         # SETUP
-        self.base = base
-        self.base.set_background_color(0.1, 0.1, 0.1, 1)
-        lens = OrthographicLens()
-        lens.setFilmSize(640, 480)
-        lens.setNearFar(-50, 50)
-        self.base.cam.node().setLens(lens)
+        self._base = base_obj
+        self._base.set_background_color(0.1, 0.1, 0.1, 1)
         
         # PLAYFIELD
         self.scale_factor = 1 # 1:1 pixel-unit scale
@@ -46,62 +38,70 @@ class Game():
             'bottom': (0, 1, 0)
         }
         
+        # CAMERA
+        lens = OrthographicLens()
+        lens.setFilmSize(640 * self.scale_factor, 480 * self.scale_factor)
+        lens.setNearFar(-50, 50)
+        self._base.cam.node().setLens(lens)
+        
         # COLLISION HANDLING
         self.boundaries = {k: CollisionPlane(Plane(Vec3(self.planepos[k]), Point3(v, 0, 0))) for k, v in self.playfield_bounds.items()}
-        self.cTrav = CollisionTraverser()
-        self.collHandler = CollisionHandlerEvent()
-        self.collHandler.addInPattern('%fn-into-%in')
-        self.collHandler.addOutPattern('%fn-out-%in')
+        self.coll_traverser = CollisionTraverser()
+        self.coll_handler = CollisionHandlerEvent()
+        self.coll_handler.addInPattern('%fn-into-%in')
+        self.coll_handler.addOutPattern('%fn-out-%in')
         
-        self.cTrav.showCollisions(self.base.render) # Debugging
+        self.coll_traverser.showCollisions(self._base.render) # Debugging
         
-        self.base.accept('bullet-into-enemy', self.bullet_enemy_collision)
+        self._base.accept('bullet-into-enemy', self.bullet_enemy_collision)
         # self.base.accept('bullet-out-enemy', self.end_bullet_enemy_collision) # TODO: Implement this
-        self.base.accept('player-into-enemy', self.player_enemy_collision)
-        self.base.accept('player-out-enemy', self.end_player_enemy_collision)
+        self._base.accept('player-into-enemy', self.player_enemy_collision)
+        self._base.accept('player-out-enemy', self.end_player_enemy_collision)
         for side, boundary in self.boundaries.items(): # Playfield boundary collision setup
             coll_node = CollisionNode('boundary_' + side)
             coll_node.addSolid(boundary)
             coll_node.setIntoCollideMask(BitMask32.bit(1))
-            self.base.render.attachNewNode(coll_node)
+            self._base.render.attachNewNode(coll_node)
         self.active_collisions = set() # Track active collisions
         
         # PLAYER
-        self.player = Player(base=self.base,
+        self.player = Player(base=self._base,
                              charId=0,
                              entity_type='player',
                              model_file='assets/sprites/ship/ship.egg',
-                             cTrav=self.cTrav,
-                             cHandler=self.collHandler
+                             cTrav=self.coll_traverser,
+                             cHandler=self.coll_handler,
+                             playfield_bounds=self.playfield_bounds
                              )
         # TASK MANAGER
-        self.base.taskMgr.add(self.player.move_ship, "move_task")
-        self.base.taskMgr.add(self.player.update_animation, "update_animation")
-        self.base.taskMgr.add(self.player.update_bullets, "update_bullets")
-        self.base.taskMgr.add(self.traverse_collisions, "traverse_task")
-        self.base.taskMgr.add(self.apply_collision_damage, "collision_damage_task")
+        self._base.taskMgr.add(self.player.move_ship, "move_task")
+        self._base.taskMgr.add(self.player.update_animation, "update_animation")
+        self._base.taskMgr.add(self.player.update_bullets, "update_bullets")
+        self._base.taskMgr.add(self.traverse_collisions, "traverse_task")
+        self._base.taskMgr.add(self.apply_collision_damage, "collision_damage_task")
         
         # ENEMIES
         self.enemy_limit = 10
         self.enemies = []  # central enemy list
         self.enemy_ids_global = [] # Possibly don't need this
         self.enemy_spawner = EnemySpawner(
-            base=self.base,
+            base=self._base,
             enemy_class=Enemy,
             spawn_interval=300.0,
-            spawn_area=(-300.0, 300.0, 50.0, 200.0),
-            cTrav=self.cTrav,
-            cHandler=self.collHandler,
+            spawn_area=(-300.0 * self.scale_factor,
+                        300.0 * self.scale_factor,
+                        50.0 * self.scale_factor,
+                        200.0 * self.scale_factor),
+            cTrav=self.coll_traverser,
+            cHandler=self.coll_handler,
             enemyL=self.enemies,
             global_enemy_idsL=self.enemy_ids_global,
             enemy_limit=self.enemy_limit,
             player_ref=self.player
         )
-        # print(self.enemy_spawner.enemies)
-        # self.enemies.extend(self.enemy_spawner.enemies)
     
     def traverse_collisions(self, task):
-        self.cTrav.traverse(self.base.render)
+        self.coll_traverser.traverse(self._base.render)
         return task.cont
     
     def bullet_enemy_collision(self, entry):
@@ -120,9 +120,10 @@ class Game():
             if enemy.HP <= 0:
                 enemy.removeNode()
                 self.enemies.remove(enemy)
-                self.base.taskMgr.remove('update_enemy_{}'.format(enemy.id))
+                self._base.taskMgr.remove('update_enemy_{}'.format(enemy.id))
 
     def player_enemy_collision(self, entry):
+        """Handles the collision between the player and an enemy."""
         enemy_node = entry.getIntoNodePath().getPythonTag("enemy")
         enemy = next((e for e in self.enemies if e.collNode.getPythonTag('enemy') == enemy_node), None)
         player = self.player
@@ -135,6 +136,7 @@ class Game():
             enemy.last_collision = time.time()
 
     def end_player_enemy_collision(self, entry):
+        """Ends the collision between a player and an enemy."""
         enemy_node = entry.getIntoNodePath().getPythonTag("enemy")
         enemy = next((e for e in self.enemies if e.collNode.getPythonTag('enemy') == enemy_node), None)
         player = self.player
@@ -144,6 +146,7 @@ class Game():
             self.active_collisions.discard((player, enemy))
 
     def apply_collision_damage(self, task):
+        """Applies damage to entities that are colliding."""
         cooldown = 0.3  # Time in seconds before damage can be applied again
         current_time = time.time()
 
@@ -167,7 +170,7 @@ class Game():
                             if e.HP <= 0:
                                 self.enemies.remove(e)
                                 e.removeNode()
-                                self.base.taskMgr.remove('update_enemy_{}'.format(e.id))
+                                self._base.taskMgr.remove('update_enemy_{}'.format(e.id))
                                 print("Enemy destroyed")
                                 self.active_collisions.discard((player, e))  # End collision if enemy is destroyed
 
@@ -185,4 +188,4 @@ class Game():
 # Game Init
 base = Base()
 game = Game(base)
-game.base.run()
+game._base.run()

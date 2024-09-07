@@ -9,9 +9,10 @@ class Bullet(NodePath):
         super().__init__("bullet")
         self.model = base.loader.loadModel(bullet_model)
         self.model.reparentTo(self)
+        
         # DGB: Centering
-        bounds = self.model.getBounds()
-        print(f"CENTER: {bounds.getCenter()}")
+        # bounds = self.model.getBounds()
+        # print(f"CENTER: {bounds.getCenter()}")
         
         self.scale = scale
         self.setScale(self.scale)
@@ -21,9 +22,9 @@ class Bullet(NodePath):
         self.HP = 1
         self.exists = True  # like "alive" for Entities
 
-        # Collision stuff
+        # COLLISION
         pointA, pointB = get_box_dimensions(eggfile=bullet_model, scale_factor=self.scale, offsetT=None)
-        print(pointA, pointB)
+        # print(pointA, pointB)
         self.collBox = CollisionBox(
             Point3(pointA[0], pointA[1], pointA[2]),
             Point3(pointB[0], pointB[1], pointB[2])
