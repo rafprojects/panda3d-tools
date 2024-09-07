@@ -31,6 +31,7 @@ class Player(Entity):
         self.bullets = []
         self.bullet_vel = 400
         self.bullet_offset = (0, 0)  # align bullet to ship
+        self.shot_limit = 6
         # Keypress event handlers
         self.base.accept("arrow_left", self.update_moving_keymap, ["left", True])
         self.base.accept("arrow_left-up", self.update_moving_keymap, ["left", False])
@@ -121,10 +122,10 @@ class Player(Entity):
         dt = globalClock.getDt()
         for bullet in self.bullets:
             bullet.update_pos(dt)
-            if bullet.getZ() > 205:
+            if bullet.getZ() > self.playfield_bounds['top']:
                 bullet.removeNode()
                 self.bullets.remove(bullet)
-            if len(self.bullets) > 6:
+            if len(self.bullets) > self.shot_limit:
                 self.bullets[0].removeNode()
                 self.bullets.remove(self.bullets[0])
         return task.cont
