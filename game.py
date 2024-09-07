@@ -66,7 +66,8 @@ class Game():
             cHandler=self.collHandler,
             enemyL=self.enemies,
             global_enemy_idsL=self.enemy_ids_global,
-            enemy_limit=self.enemy_limit
+            enemy_limit=self.enemy_limit,
+            player_ref=self.player
         )
         # print(self.enemy_spawner.enemies)
         # self.enemies.extend(self.enemy_spawner.enemies)
