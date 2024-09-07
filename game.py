@@ -1,7 +1,7 @@
 import time
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import loadPrcFile, OrthographicLens
-from panda3d.core import CollisionTraverser, CollisionHandlerEvent
+from panda3d.core import CollisionTraverser, CollisionHandlerEvent, CollisionNode, CollisionPlane, Plane, Vec3, Point3, BitMask32
 from src.player import Player
 from src.entity import Enemy, EnemySpawner
 from src.collision import handle_bullet, handle_enemy, get_bullet_and_enemy_from_entry
@@ -11,6 +11,7 @@ loadPrcFile("config/conf.prc")
 
 
 class Base(ShowBase):
+    """The base class for the game, separated in case of future expansion."""
     def __init__(self):
         super().__init__()
 
@@ -26,19 +27,46 @@ class Game():
         lens.setNearFar(-50, 50)
         self.base.cam.node().setLens(lens)
         
-        # Collision Handling Block
+        # PLAYFIELD
+        self.scale_factor = 1 # 1:1 pixel-unit scale
+        self.resolution_x = 640 * self.scale_factor
+        self.resolution_y = 480 * self.scale_factor
+        self.half_width = self.resolution_x / 2
+        self.half_height = self.resolution_y / 2
+        self.playfield_bounds = {
+            'left': -self.half_width,
+            'right': self.half_width,
+            'top': self.half_height,
+            'bottom': -self.half_height
+        }
+        self.planepos = {
+            'left': (1, 0, 0),
+            'right': (-1, 0, 0),
+            'top': (0, -1, 0),
+            'bottom': (0, 1, 0)
+        }
+        
+        # COLLISION HANDLING
+        self.boundaries = {k: CollisionPlane(Plane(Vec3(self.planepos[k]), Point3(v, 0, 0))) for k, v in self.playfield_bounds.items()}
         self.cTrav = CollisionTraverser()
         self.collHandler = CollisionHandlerEvent()
         self.collHandler.addInPattern('%fn-into-%in')
         self.collHandler.addOutPattern('%fn-out-%in')
         
-        self.cTrav.showCollisions(self.base.render)
+        self.cTrav.showCollisions(self.base.render) # Debugging
+        
         self.base.accept('bullet-into-enemy', self.bullet_enemy_collision)
+        # self.base.accept('bullet-out-enemy', self.end_bullet_enemy_collision) # TODO: Implement this
         self.base.accept('player-into-enemy', self.player_enemy_collision)
         self.base.accept('player-out-enemy', self.end_player_enemy_collision)
-        self.active_collisions = set()
+        for side, boundary in self.boundaries.items(): # Playfield boundary collision setup
+            coll_node = CollisionNode('boundary_' + side)
+            coll_node.addSolid(boundary)
+            coll_node.setIntoCollideMask(BitMask32.bit(1))
+            self.base.render.attachNewNode(coll_node)
+        self.active_collisions = set() # Track active collisions
         
-        # player block
+        # PLAYER
         self.player = Player(base=self.base,
                              charId=0,
                              entity_type='player',
@@ -46,17 +74,17 @@ class Game():
                              cTrav=self.cTrav,
                              cHandler=self.collHandler
                              )
-        # Task Manager
+        # TASK MANAGER
         self.base.taskMgr.add(self.player.move_ship, "move_task")
         self.base.taskMgr.add(self.player.update_animation, "update_animation")
         self.base.taskMgr.add(self.player.update_bullets, "update_bullets")
         self.base.taskMgr.add(self.traverse_collisions, "traverse_task")
         self.base.taskMgr.add(self.apply_collision_damage, "collision_damage_task")
         
-        # enemy stuff
+        # ENEMIES
         self.enemy_limit = 10
         self.enemies = []  # central enemy list
-        self.enemy_ids_global = []
+        self.enemy_ids_global = [] # Possibly don't need this
         self.enemy_spawner = EnemySpawner(
             base=self.base,
             enemy_class=Enemy,
