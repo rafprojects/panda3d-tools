@@ -181,7 +181,7 @@ def draw_grass_blades_on_tile(img_obj, blade_direction=None, blade_uniformity=1.
 
             # Draw the main blade with gradient and slight color variations
             for k in range(max_blade_width):
-                gradient_factor = k // max_blade_width  # Ranges from 0 at the root to 1 at the tip
+                gradient_factor = k / max_blade_width  # Ranges from 0 at the root to 1 at the tip
                 color_variation = random.randint(-10, 10)
                 blade_color = (
                     max(0, min(34 + color_variation, 255)) * (1 - gradient_factor),
