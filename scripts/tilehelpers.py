@@ -122,6 +122,8 @@ def palette_by_noise_val(tile_type, noise_val, palettesD, threshold_a, threshold
             return palettesD[type_variationsL[0]], scaled_noise_val
         elif scaled_noise_val < threshold_b:
             return palettesD[type_variationsL[1]], scaled_noise_val
+        else:
+            return palettesD[tile_type], scaled_noise_val
     else:
         return palettesD[tile_type], scaled_noise_val
 
