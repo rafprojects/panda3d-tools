@@ -50,4 +50,5 @@ def get_perlin_sprite():
     plt.imshow(img/255)
     plt.show()
     
-get_perlin_sprite()
+if __name__ == "__main__":
+    get_perlin_sprite()
