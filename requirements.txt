@@ -1,0 +1,12 @@
+opencv-python>=4.5.0
+numpy>=1.19.0
+torch>=1.7.0
+Pillow>=8.0.0
+# Optional AI upscalers
+realesrgan>=0.3.0
+super-image>=0.1.0
+backgroundremover>=0.1.0 # For background removal
+scikit-image>=0.19 # For skimage.restoration denoising
+# For command line tools
+argparse
+vtracer>=0.2.0 # For image vectorization/tracing
