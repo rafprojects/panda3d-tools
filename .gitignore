@@ -2,11 +2,42 @@
 .vscode
 __pycache__
 *.pyc
+*.whl
 
 # Project files & folders
 __storage__
 assets
 *.csv
+venv
 
 # Testfiles and such
 testgame.py
+
+# Media files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.webm
+*.ogg
+*.wav
+*.mp3
+*.flac
+*.m4a
+*.aac
+
+# 3d models
+*.obj
+
+# Model files
+*.h5
+*.hdf5
+*.onnx
+*.pth
+*.pt
+*.ckpt
+
+# Backup files
+*.bak
+*.tmp
