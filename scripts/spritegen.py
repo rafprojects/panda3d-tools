@@ -1,7 +1,7 @@
-from PIL import ImageDraw
 import random
 import math
 
+from PIL import ImageDraw
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -25,14 +25,18 @@ def display_template(template):
     plt.show()
 
 def gen_simple_tile(img_obj, tile_type, variance=False, simplex_enabled=False, simplex_scale=None, 
-                    palette_var_thresh_A=None, palette_var_thresh_B=None, save=False, save_location=None, draw_grass_blades=False, blade_direction=None, blade_uniformity=1.0, blade_thickness=1.0, blade_tallness=1.0, light_direction=(1,1), root_skew_range=(2,4), blade_curve_intensity=1.0):
+                    palette_var_thresh_A=None, palette_var_thresh_B=None, save=False, save_location=None, 
+                    draw_grass_blades=False, blade_direction=None, blade_uniformity=1.0, blade_thickness=1.0, 
+                    blade_tallness=1.0, light_direction='top-left', root_skew_range=(2,4), blade_curve_intensity=1.0):
     
     color_range = palettesD[tile_type]
-    # print("COLOR RANGE: ", color_range)
-    # print("COLOR RANGE LEN: ", len(color_range))
     pixels = img_obj.load()
     
     width, height = img_obj.size
+    
+    # Create a single noise generator to reuse for all pixels
+    simplex_gen = OpenSimplex(seed=random.randint(0, 1000)) if simplex_enabled else None
+    
     for i in range(width):
         for j in range(height):
             if simplex_enabled:
@@ -43,7 +47,8 @@ def gen_simple_tile(img_obj, tile_type, variance=False, simplex_enabled=False, s
                     scale=simplex_scale,
                     color_range=color_range,
                     variance=variance,
-                    palette_thresholds={'A': palette_var_thresh_A, 'B': palette_var_thresh_B}
+                    palette_thresholds={'A': palette_var_thresh_A, 'B': palette_var_thresh_B},
+                    simplex_gen=simplex_gen  # Pass the shared noise generator
                 )
             else:
                 color = random.choice(color_range)
@@ -51,7 +56,8 @@ def gen_simple_tile(img_obj, tile_type, variance=False, simplex_enabled=False, s
             pixels[i, j] = color
             
     if draw_grass_blades and tile_type in ['regular_grass', 'green_grass']:
-        draw_grass_blades_on_tile(img_obj, blade_direction, blade_uniformity, blade_thickness, blade_tallness, light_direction, root_skew_range, blade_curve_intensity)
+        draw_grass_blades_on_tile(img_obj, blade_direction, blade_uniformity, blade_thickness, blade_tallness, 
+                                  light_direction, root_skew_range, blade_curve_intensity)
     
     if save:
         save_img(img=img_obj, save_location=save_location, img_name=tile_type)
