@@ -70,6 +70,30 @@ def main():
         default=10,
         help="Alpha matting erode size. Default: 10."
     )
+    rembg_parser.add_argument(
+        "--despill",
+        action="store_true",
+        help="Enable color despill post-processing. Default: False."
+    )
+    rembg_parser.add_argument(
+        "--despill-color",
+        type=str,
+        default="green",
+        choices=["green", "blue", "red"],
+        help="Target color for despill ('green', 'blue', 'red'). Default: green."
+    )
+    rembg_parser.add_argument(
+        "--despill-threshold",
+        type=float,
+        default=1.05,
+        help="Threshold factor for despill detection (e.g., 1.05 means channel must be 5% greater than others). Default: 1.05."
+    )
+    rembg_parser.add_argument(
+        "--despill-intensity",
+        type=float,
+        default=0.7,
+        help="Intensity of the despill correction (0.0 to 1.0). Default: 0.7."
+    )
 
     # backgroundremover subparser
     br_parser = subparsers.add_parser("backgroundremover", help="Use backgroundremover for video background removal.")
@@ -131,7 +155,11 @@ def main():
             model=args.model,
             extra_args=extra_args,
             max_workers=args.max_workers,
-            quality=args.quality
+            quality=args.quality,
+            despill=args.despill,
+            despill_color=args.despill_color,
+            despill_threshold=args.despill_threshold,
+            despill_intensity=args.despill_intensity
         )
     elif args.method == "backgroundremover":
         remove_background_video_backgroundremover(
