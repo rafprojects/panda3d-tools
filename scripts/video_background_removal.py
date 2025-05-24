@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 import time
+import sys
 
 def find_executable(executable_name):
     """Helper function to find an executable in PATH or common virtualenv locations."""
@@ -286,10 +287,11 @@ def remove_background_video_backgroundremover(
     alpha_matting: bool = False,
     alpha_matting_foreground_threshold: int = 240,
     alpha_matting_background_threshold: int = 10,
-    alpha_matting_erode_size: int = 10
+    alpha_matting_erode_size: int = 10,
+    max_workers: int = 4
 ):
     """
-    Removes background from a video using the backgroundremover CLI.
+    Removes background from a video using the backgroundremover CLI in a frame-by-frame approach.
 
     Args:
         input_video_path (str): Path to the input video file.
@@ -299,6 +301,7 @@ def remove_background_video_backgroundremover(
         alpha_matting_foreground_threshold (int): Foreground threshold for alpha matting.
         alpha_matting_background_threshold (int): Background threshold for alpha matting.
         alpha_matting_erode_size (int): Erode size for alpha matting.
+        max_workers (int): Maximum number of parallel workers for frame processing.
 
     Returns:
         bool: True if successful, False otherwise.
@@ -312,45 +315,155 @@ def remove_background_video_backgroundremover(
         print("Error: 'backgroundremover' executable not found. Please ensure it's installed and in your PATH.")
         print("You can install it with: pip install backgroundremover")
         return False
-        
-    command = [
-        br_executable,
-        "-i", input_video_path,
-        "-o", output_video_path,
-        "-m", model_name
-    ]
 
-    if alpha_matting:
-        command.extend([
-            "-a", # Enable alpha matting
-            "-afg", str(alpha_matting_foreground_threshold),
-            "-abg", str(alpha_matting_background_threshold),
-            "-ae", str(alpha_matting_erode_size)
-        ])
-    
-    print(f"Executing backgroundremover command: {' '.join(command)}")
-    try:
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = process.communicate()
+    with tempfile.TemporaryDirectory() as temp_dir:
+        print(f"Created temporary directory for frames: {temp_dir}")
 
-        if process.returncode == 0:
-            print(f"backgroundremover video processing successful. Output saved to {output_video_path}")
-            if stdout:
-                print("backgroundremover stdout:\n", stdout.decode())
-            return True
-        else:
-            print(f"Error during backgroundremover video processing (return code: {process.returncode}):")
-            if stdout:
-                print("backgroundremover stdout:\n", stdout.decode())
-            if stderr:
-                print("backgroundremover stderr:\n", stderr.decode())
+        cap = cv2.VideoCapture(input_video_path)
+        if not cap.isOpened():
+            print(f"Error: Could not open input video: {input_video_path}")
             return False
-    except FileNotFoundError:
-        print(f"Error: backgroundremover command '{br_executable}' not found. Make sure backgroundremover is installed and in your PATH.")
-        return False
-    except Exception as e:
-        print(f"An unexpected error occurred with backgroundremover: {e}")
-        return False
+
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        
+        if total_frames == 0:
+            print(f"Error: Video has no frames or metadata is incorrect: {input_video_path}")
+            cap.release()
+            return False
+            
+        print(f"Video properties: {frame_width}x{frame_height}, {fps:.2f} fps, {total_frames} frames")
+
+        def process_frame_br(frame_idx_pr): # Renamed frame_idx to avoid conflict
+            input_frame_path = os.path.join(temp_dir, f"frame_{frame_idx_pr:06d}.png")
+            output_frame_path = os.path.join(temp_dir, f"processed_{frame_idx_pr:06d}.png")
+            
+            command = [
+                br_executable,
+                "-i", input_frame_path,
+                "-o", output_frame_path,
+                "-m", model_name
+            ]
+
+            if alpha_matting:
+                command.extend([
+                    "-a",
+                    "-afg", str(alpha_matting_foreground_threshold),
+                    "-abg", str(alpha_matting_background_threshold),
+                    "-ae", str(alpha_matting_erode_size)
+                ])
+            
+            try:
+                process = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=120)
+                return True
+            except subprocess.CalledProcessError as e:
+                print(f"Error processing frame {frame_idx_pr} with backgroundremover: {e}")
+                if e.stderr: print(f"stderr: {e.stderr.decode()}")
+                if e.stdout: print(f"stdout: {e.stdout.decode()}")
+                return False
+            except subprocess.TimeoutExpired as e:
+                print(f"Timeout processing frame {frame_idx_pr} with backgroundremover: {e}")
+                if e.stderr: print(f"stderr: {e.stderr.decode()}")
+                if e.stdout: print(f"stdout: {e.stdout.decode()}")
+                return False
+
+
+        print(f"Extracting {total_frames} frames from video...")
+        extracted_frame_count = 0
+        extraction_start_time = time.time()
+        
+        for i in range(total_frames):
+            ret, frame = cap.read()
+            if not ret:
+                print(f"Warning: Could not read frame {i+1}/{total_frames}. Stopping extraction.")
+                break
+            frame_path = os.path.join(temp_dir, f"frame_{extracted_frame_count:06d}.png")
+            cv2.imwrite(frame_path, frame)
+            extracted_frame_count += 1
+            
+            if extracted_frame_count % 100 == 0:
+                elapsed = time.time() - extraction_start_time
+                fps_extraction = extracted_frame_count / elapsed if elapsed > 0 else 0
+                print(f"Extracted {extracted_frame_count}/{total_frames} frames ({fps_extraction:.2f} frames/sec)")
+        
+        cap.release()
+        print(f"Extracted {extracted_frame_count} frames in {time.time() - extraction_start_time:.2f} seconds")
+
+        if extracted_frame_count == 0:
+            print("Error: No frames were extracted from the video.")
+            return False
+
+        print(f"Processing {extracted_frame_count} frames with backgroundremover (model: '{model_name}')...")
+        processing_start_time = time.time()
+        
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            results = list(executor.map(process_frame_br, range(extracted_frame_count)))
+            
+        if not all(results):
+            print("Error: Some frames failed to process with backgroundremover.")
+            
+        print(f"Frame processing completed in {time.time() - processing_start_time:.2f} seconds")
+
+        print(f"Creating output video at {output_video_path}...")
+        output_dir_path = os.path.dirname(output_video_path)
+        if output_dir_path and not os.path.exists(output_dir_path):
+            os.makedirs(output_dir_path)
+        
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out_video = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height), True)
+        
+        if not out_video.isOpened():
+            print(f"Error: Could not create output video file: {output_video_path}")
+            return False
+            
+        assembly_start_time = time.time()
+        frames_written = 0
+        for i in range(extracted_frame_count):
+            processed_frame_path = os.path.join(temp_dir, f"processed_{i:06d}.png")
+            if os.path.exists(processed_frame_path):
+                processed_frame_bgra = cv2.imread(processed_frame_path, cv2.IMREAD_UNCHANGED)
+                
+                if processed_frame_bgra is None:
+                    print(f"Warning: Could not read processed frame {i} at {processed_frame_path}. Skipping.")
+                    continue
+                    
+                if processed_frame_bgra.shape[2] == 4:
+                    alpha = processed_frame_bgra[:, :, 3]
+                    bg = np.ones_like(processed_frame_bgra[:, :, :3], dtype=np.uint8) * 255
+                    fg = processed_frame_bgra[:, :, :3]
+                    
+                    alpha_float = alpha.astype(np.float32) / 255.0
+                    blended = np.zeros_like(fg, dtype=np.uint8)
+                    for c_idx in range(3):
+                        blended[:, :, c_idx] = fg[:, :, c_idx] * alpha_float + bg[:, :, c_idx] * (1 - alpha_float)
+                    frame_to_write = blended
+                elif processed_frame_bgra.shape[2] == 3:
+                    frame_to_write = processed_frame_bgra
+                else:
+                    print(f"Warning: Processed frame {i} has unexpected shape {processed_frame_bgra.shape}. Skipping.")
+                    continue
+                    
+                out_video.write(frame_to_write)
+                frames_written +=1
+                
+                if frames_written % 100 == 0 and frames_written > 0:
+                    elapsed = time.time() - assembly_start_time
+                    fps_assembly = frames_written / elapsed if elapsed > 0 else 0
+                    print(f"Encoded {frames_written}/{extracted_frame_count} frames ({fps_assembly:.2f} frames/sec)")
+            else:
+                print(f"Warning: Processed frame not found: {processed_frame_path}. This might be due to an earlier processing error.")
+        
+        out_video.release()
+        if frames_written == 0 and extracted_frame_count > 0:
+            print("Error: No frames were successfully processed and written to the output video.")
+            return False
+
+        print(f"Video creation complete. {frames_written} frames written in {time.time() - assembly_start_time:.2f} seconds")
+        print(f"Output video saved to: {output_video_path}")
+        
+    return True
 
 if __name__ == '__main__':
     # Basic test (requires dummy video files and executables in PATH)
